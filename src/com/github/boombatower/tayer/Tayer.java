@@ -1,5 +1,6 @@
 package com.github.boombatower.tayer;
 
+import java.util.HashMap;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
@@ -13,18 +14,24 @@ import org.bukkit.util.Vector;
 
 public class Tayer extends JavaPlugin {
 	protected Logger log = Logger.getLogger("Minecraft");
-	protected Vector size = new Vector(10, 10, 10);
+	protected HashMap<String, Vector> sizes = new HashMap<String, Vector>();
 
-	public void onEnable() {
-		log.info("Sup dawg");
-	}
-	
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 		if (!(sender instanceof Player)) {
 			sender.sendMessage("Only a player can issue this command.");
 			return false;
 		}
+
 		Player player = (Player) sender;
+		String name = player.getName();
+
+		Vector size;
+		if (sizes.containsKey(name)) {
+			size = sizes.get(name);
+		}
+		else {
+			sizes.put(name, size = new Vector(10, 10, 10));
+		}
 
 		if(cmd.getName().equalsIgnoreCase("tayer")) {
 			if (args.length == 1) {
@@ -47,21 +54,21 @@ public class Tayer extends JavaPlugin {
 			generateBlock(player.getLocation().add(-(size.getX() / 2), -size.getY(), -(size.getZ() / 2)), size);
 			return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	protected void generateBlock(Location point, Vector size) {
 		World world = point.getWorld();
-		 
+
 		int x_start = point.getBlockX();
 		int y_start = point.getBlockY();
 		int z_start = point.getBlockZ();
-	 
+
 		int x_lenght = x_start + size.getBlockX();
 		int y_lenght = y_start + size.getBlockY();
 		int z_lenght = z_start + size.getBlockZ();
-	 
+
 		for (int x_operate = x_start; x_operate < x_lenght; x_operate++) { 
 			for (int y_operate = y_start; y_operate < y_lenght; y_operate++) {
 				for (int z_operate = z_start; z_operate < z_lenght; z_operate++) {
