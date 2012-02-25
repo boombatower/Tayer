@@ -43,7 +43,7 @@ public class Tayer extends JavaPlugin {
 				size.setZ(Integer.parseInt(args[2]));
 			}
 			
-			sender.sendMessage("Generating TNT block of size " + size + "!");
+			getServer().broadcastMessage(name + " is generating " + size  + " block of TNT!");
 			generateBlock(player.getLocation().add(-(size.getX() / 2), -size.getY(), -(size.getZ() / 2)), size);
 			return true;
 		}
