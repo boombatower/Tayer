@@ -1,39 +1,48 @@
 package com.github.boombatower.tayer;
 
 import java.util.HashMap;
-import java.util.logging.Logger;
 
 import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+/**
+ * Primary Tayer plugin class.
+ * 
+ * @author boombatower
+ */
 public class Tayer extends JavaPlugin {
-	protected Logger log = Logger.getLogger("Minecraft");
+	/**
+	 * Keep track of the size used by each player.
+	 */
 	protected HashMap<String, Vector> sizes = new HashMap<String, Vector>();
 
+	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+		// Only allow players with a location.
 		if (!(sender instanceof Player)) {
 			sender.sendMessage("Only a player can issue this command.");
 			return false;
 		}
 
+		// Cast player object and determine player name.
 		Player player = (Player) sender;
 		String name = player.getName();
 
-		Vector size;
-		if (sizes.containsKey(name)) {
-			size = sizes.get(name);
-		}
-		else {
-			sizes.put(name, size = new Vector(10, 10, 10));
-		}
+		if (cmd.getName().equalsIgnoreCase("tayer")) {
+			// Load previous size used by player, otherwise use size of 10 as default.
+			Vector size;
+			if (sizes.containsKey(name)) {
+				size = sizes.get(name);
+			}
+			else {
+				sizes.put(name, size = new Vector(10, 10, 10));
+			}
 
-		if(cmd.getName().equalsIgnoreCase("tayer")) {
+			// Parse and apply the arguments based on the format.
 			if (args.length == 1) {
 				size.setX(Integer.parseInt(args[0]));
 				size.setY(Integer.parseInt(args[0]));
@@ -49,33 +58,34 @@ public class Tayer extends JavaPlugin {
 				size.setY(Integer.parseInt(args[1]));
 				size.setZ(Integer.parseInt(args[2]));
 			}
-			
-			getServer().broadcastMessage(name + " is generating " + size  + " block of TNT!");
-			generateBlock(player.getLocation().add(-(size.getX() / 2), -size.getY(), -(size.getZ() / 2)), size);
+
+			// Calculate the start location for a cube centered underneath the player.
+			Location start = player.getLocation().add(-(size.getX() / 2), -size.getY(), -(size.getZ() / 2));
+
+			// Correct the cube if it overflows past the top of bottom of the map.
+			if (start.getY() < 0) {
+				size.setY((int) (size.getY() + start.getY()));
+				start.setY(0);
+			}
+			// @TODO Find variable for world height.
+			else if (start.getY() + size.getY() > 128) {
+				size.setY((int) (size.getY() - start.getY() + 128));
+			}
+
+			// Broadcast a message about TNT creation.
+			getServer().broadcastMessage(name + " is generating " + size + " block of TNT!");
+
+			// Generate the request cube and recursively divide if necessary.
+			Cube cube = new Cube(start, size);
+			Cube[] cubes = cube.divide(16000); // @TODO Make configurable.
+
+			// Fill the cubes with TNT using a background thread.
+			CubeFill fill = new CubeFill(cubes, 46);
+			int taskID = getServer().getScheduler().scheduleAsyncRepeatingTask(this, fill, 5L, 80L);
+			fill.taskID = taskID;
 			return true;
 		}
 
 		return false;
-	}
-
-	protected void generateBlock(Location point, Vector size) {
-		World world = point.getWorld();
-
-		int x_start = point.getBlockX();
-		int y_start = point.getBlockY();
-		int z_start = point.getBlockZ();
-
-		int x_lenght = x_start + size.getBlockX();
-		int y_lenght = y_start + size.getBlockY();
-		int z_lenght = z_start + size.getBlockZ();
-
-		for (int x_operate = x_start; x_operate < x_lenght; x_operate++) { 
-			for (int y_operate = y_start; y_operate < y_lenght; y_operate++) {
-				for (int z_operate = z_start; z_operate < z_lenght; z_operate++) {
-					Block blockToChange = world.getBlockAt(x_operate, y_operate, z_operate);
-					blockToChange.setTypeId(46);
-				}
-			}
-		}
 	}
 }
