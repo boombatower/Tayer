@@ -1,0 +1,1 @@
+Provides a [Bukkit](http://bukkit.org/) plugin for generating blocks of TNT.
