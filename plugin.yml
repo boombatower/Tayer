@@ -1,0 +1,15 @@
+name: Tayer
+main: com.github.boombatower.tayer.Tayer
+version: 1.0
+description: Generate a block of TNT.
+author: boombatower
+
+commands:
+    tayer:
+      description: Generate a block of TNT.
+      usage: |
+        /tayer [size-xyz]
+        /tayer [size-xz] [depth-y]
+        /tayer [x] [y] [z]
+      permission: tayer.tayer
+      permisison-message: You cannot generate the almighty TNT block.
